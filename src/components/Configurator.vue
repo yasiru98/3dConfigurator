@@ -106,6 +106,7 @@ export default {
     init: function() {
       //set resources loaded to false
       this.resources_loaded = false;
+      //get canvas container element
       this.container = document.getElementById("container");
       //set up loading screen
       this.loadingScreen = {
@@ -121,7 +122,7 @@ export default {
           new THREE.MeshBasicMaterial({ color: 0x4444ff })
         )
       };
-
+      this.loadingScreen.scene.background = new THREE.Color("hsl(0, 100%, 100%)");
       //set up loading box
       this.loadingScreen.box.position.set(0, 0, 5);
       this.loadingScreen.camera.lookAt(this.loadingScreen.box.position);
@@ -147,8 +148,8 @@ export default {
       this.darkTexture = textureLoader.load("/textures/dark.jpg");
       this.lightTexture = textureLoader.load("/textures/light.jpg");
 
-      const loader = new GLTFLoader(loadingManager);
       //load chair model
+      const loader = new GLTFLoader(loadingManager);
       loader.load(
         // resource URL
         "/models/chair/N01_Beech.gltf",
@@ -168,15 +169,15 @@ export default {
           console.log("An error happened when loading model");
         }
       );
-      //get canvas container and set up renderer
 
+      //set up renderer
       this.renderer = new THREE.WebGLRenderer({ antialias: true });
       this.renderer.setPixelRatio(window.devicePixelRatio);
       this.renderer.setSize(
         this.container.clientWidth,
         this.container.clientHeight
       );
-
+      //set up configurator
       this.camera = new THREE.PerspectiveCamera(
         70,
         this.container.clientWidth / this.container.clientHeight,
@@ -192,7 +193,7 @@ export default {
       const mainLight = new THREE.DirectionalLight(0xffffff, 0.4);
       mainLight.position.set(0, 10, 10);
       this.scene.add(ambientLight, mainLight);
-
+      //orbital controls
       this.container.appendChild(this.renderer.domElement);
       this.controls = new OrbitControls(this.camera, this.renderer.domElement);
       this.controls.autoRotate = true;
@@ -201,12 +202,10 @@ export default {
       this.controls.dampingFactor = 0.1;
       this.controls.maxDistance = 3;
       this.controls.minDistance = 1;
-
       this.controls.enablePan = false;
     },
     animate: function() {
       //render loeading screen if resources are loading
-     
       if (this.resources_loaded == false) {
         requestAnimationFrame(this.animate);
 
