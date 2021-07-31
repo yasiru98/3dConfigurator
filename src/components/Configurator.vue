@@ -64,7 +64,7 @@
               </v-col>
               <v-col sm="12" md="5">
                 <button icon v-on:click="changeMaterial(`N01_BaseColor_Black.png`)">
-                  <v-avatar color="black" size="62"></v-avatar>&nbsp;Black Metal
+                  <v-avatar color="black" size="62"></v-avatar>&nbsp;Black ME
                 </button>
               </v-col>
             </v-row>
