@@ -64,7 +64,7 @@
               </v-col>
               <v-col sm="12" md="5">
                 <button icon v-on:click="changeMaterial(`N01_BaseColor_Black.png`)">
-                  <v-avatar color="black" size="62"></v-avatar>&nbsp;Black
+                  <v-avatar color="black" size="62"></v-avatar>&nbsp;Black Metal
                 </button>
               </v-col>
             </v-row>
@@ -143,8 +143,7 @@ export default {
           this.chair = gltf.scene;
           this.originalChair = gltf.scene;
           this.scene.add(this.chair);
-          this.chair.position.set(0,-0.3,0);
-
+          this.chair.position.set(0, -0.3, 0);
         },
         // called while loading is progressing
         function(xhr) {
@@ -180,8 +179,9 @@ export default {
     },
     //Handle window resize, set camera aspect/renderer size
     resizeHandler: function() {
-      (this.camera.aspect = this.container.clientWidth),
-        this.container.clientHeight;
+      this.camera.aspect =
+        this.container.clientWidth / this.container.clientHeight;
+      this.camera.updateProjectionMatrix();
       this.renderer.setSize(
         this.container.clientWidth,
         this.container.clientHeight
