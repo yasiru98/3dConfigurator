@@ -56,15 +56,17 @@
             <v-row id="row2" no-gutters align="center" justify="center">
               <v-col sm="0" md="2"></v-col>
               <v-col sm="12" md="5">
-                <button v-on:click="changeMaterial(`tree5.jpg`)">
+                <button v-on:click="changeMaterial(`dark.jpg`)">
                   <v-avatar size="62">
-                    <img src="/textures/tree5.jpg">
+                    <img src="/textures/dark.jpg">
                   </v-avatar>&nbsp;Dark Wood
                 </button>
               </v-col>
               <v-col sm="12" md="5">
-                <button icon v-on:click="changeMaterial(`N01_BaseColor_Black.png`)">
-                  <v-avatar color="black" size="62"></v-avatar>&nbsp;Black Metal
+                <button icon v-on:click="changeMaterial(`light.jpg`)">
+                  <v-avatar color="black" size="62">
+                    <img src="/textures/light.jpg">
+                  </v-avatar>&nbsp;Light Wood
                 </button>
               </v-col>
             </v-row>
@@ -171,7 +173,13 @@ export default {
         if (object instanceof THREE.Mesh) {
           if (path === "N01_BaseColor_Black.png") {
             let metallic = textureLoader.load("/textures/N01_Metallic.png");
+            let metallicRough = textureLoader.load(
+              "/textures/N01_Metallic-N01_Roughness.png"
+            );
+            metallic.flipY = false;
+            metallicRough.flipY = false;
             object.metalnessMap = metallic;
+            object.roughnessMap = metallicRough;
           }
           object.material.map = texture;
         }
