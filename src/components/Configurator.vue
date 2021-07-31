@@ -98,31 +98,63 @@ export default {
       oakTexture: null,
       darkTexture: null,
       lightTexture: null,
-      loadingScreen: null
+      loadingScreen: null,
+      resources_loaded: null
     };
   },
   methods: {
     init: function() {
-      var manager = new THREE.LoadingManager(function() {
-        // this onLoad callback is executed when textures are loaded
-        console.log("done loading");
-      });
+      //set resources loaded to false
+      this.resources_loaded = false;
+      this.container = document.getElementById("container");
+      //set up loading screen
+      this.loadingScreen = {
+        scene: new THREE.Scene(),
+        camera: new THREE.PerspectiveCamera(
+          70,
+          this.container.clientWidth / this.container.clientHeight,
+          0.01,
+          10
+        ),
+        box: new THREE.Mesh(
+          new THREE.BoxGeometry(0.5, 0.5, 0.5),
+          new THREE.MeshBasicMaterial({ color: 0x4444ff })
+        )
+      };
+
+      //set up loading box
+      this.loadingScreen.box.position.set(0, 0, 5);
+      this.loadingScreen.camera.lookAt(this.loadingScreen.box.position);
+      this.loadingScreen.scene.add(this.loadingScreen.box);
+
+      //set up loading manager
+      const loadingManager = new THREE.LoadingManager();
+
+      loadingManager.onProgress = function(item, loaded, total) {
+        console.log(item, loaded, total);
+      };
+
+      loadingManager.onLoad = function() {
+        console.log("done loading textures");
+      };
 
       //load texture images
-      let textreLoader = new THREE.TextureLoader(manager);
-      this.beechTexture = textreLoader.load("/textures/N01_BaseColor_Beech.png");
-      this.oakTexture = textreLoader.load("/textures/N01_BaseColor_Oak.png");
-      this.darkTexture = textreLoader.load("/textures/dark.jpg");
-      this.lightTexture = textreLoader.load("/textures/light.jpg");
-      this.container = document.getElementById("container");
+      let textureLoader = new THREE.TextureLoader(loadingManager);
+      this.beechTexture = textureLoader.load(
+        "/textures/N01_BaseColor_Beech.png"
+      );
+      this.oakTexture = textureLoader.load("/textures/N01_BaseColor_Oak.png");
+      this.darkTexture = textureLoader.load("/textures/dark.jpg");
+      this.lightTexture = textureLoader.load("/textures/light.jpg");
 
-      const loader = new GLTFLoader();
+      const loader = new GLTFLoader(loadingManager);
       //load chair model
       loader.load(
         // resource URL
         "/models/chair/N01_Beech.gltf",
         // called when the resource is loaded
         gltf => {
+          this.resources_loaded = true;//set resources loaded to true
           this.chair = gltf.scene;
           this.scene.add(this.chair);
           this.chair.position.set(0, -0.3, 0);
@@ -135,6 +167,14 @@ export default {
         function() {
           console.log("An error happened when loading model");
         }
+      );
+      //get canvas container and set up renderer
+
+      this.renderer = new THREE.WebGLRenderer({ antialias: true });
+      this.renderer.setPixelRatio(window.devicePixelRatio);
+      this.renderer.setSize(
+        this.container.clientWidth,
+        this.container.clientHeight
       );
 
       this.camera = new THREE.PerspectiveCamera(
@@ -153,12 +193,6 @@ export default {
       mainLight.position.set(0, 10, 10);
       this.scene.add(ambientLight, mainLight);
 
-      this.renderer = new THREE.WebGLRenderer({ antialias: true });
-      this.renderer.setPixelRatio(window.devicePixelRatio);
-      this.renderer.setSize(
-        this.container.clientWidth,
-        this.container.clientHeight
-      );
       this.container.appendChild(this.renderer.domElement);
       this.controls = new OrbitControls(this.camera, this.renderer.domElement);
       this.controls.autoRotate = true;
@@ -171,13 +205,32 @@ export default {
       this.controls.enablePan = false;
     },
     animate: function() {
+      //render loeading screen if resources are loading
+     
+      if (this.resources_loaded == false) {
+        requestAnimationFrame(this.animate);
+
+        this.loadingScreen.box.position.x -= 0.05;
+        if (this.loadingScreen.box.position.x < -10) {
+          this.loadingScreen.box.position.x = 10;
+        }
+        this.loadingScreen.box.position.y = Math.sin(
+          this.loadingScreen.box.position.x
+        );
+        this.renderer.render(
+          this.loadingScreen.scene,
+          this.loadingScreen.camera
+        );
+        return;
+      }
+
+      //dislay configurator if resources are loaded
       requestAnimationFrame(this.animate);
       this.renderer.render(this.scene, this.camera);
     },
 
     //set new texture material to object on button click
     changeMaterial: function(path) {
-      // const textureLoader = new THREE.TextureLoader();
       let texture = null;
       switch (path) {
         case "N01_BaseColor_Beech":
@@ -208,11 +261,11 @@ export default {
     //Handle window resize, set camera aspect/renderer size
     resizeHandler: function() {
       this.camera.aspect =
-      this.container.clientWidth / this.container.clientHeight;
+        this.container.clientWidth / this.container.clientHeight;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(
-      this.container.clientWidth,
-      this.container.clientHeight
+        this.container.clientWidth,
+        this.container.clientHeight
       );
     }
   },
