@@ -105,7 +105,7 @@ export default {
         0.01,
         10
       );
-      this.camera.position.set(0, 1.2, 1.4);
+      this.camera.position.set(0, 0.6, 1);
       this.scene = new THREE.Scene();
 
       this.scene.background = new THREE.Color("hsl(0, 100%, 100%)");
@@ -143,6 +143,8 @@ export default {
           this.chair = gltf.scene;
           this.originalChair = gltf.scene;
           this.scene.add(this.chair);
+          this.chair.position.set(0,-0.3,0);
+
         },
         // called while loading is progressing
         function(xhr) {
