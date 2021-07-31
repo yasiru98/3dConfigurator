@@ -80,7 +80,6 @@
 
 <script>
 import * as THREE from "three";
-
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 export default {
@@ -118,15 +117,25 @@ export default {
           10
         ),
         box: new THREE.Mesh(
-          new THREE.BoxGeometry(0.5, 0.5, 0.5),
+          new THREE.BoxGeometry(0, 0.1, 1),
           new THREE.MeshBasicMaterial({ color: 0x4444ff })
+        ),
+        box2: new THREE.Mesh(
+          new THREE.BoxGeometry(0, 0.1, 1),
+          new THREE.MeshBasicMaterial({ color: 0xff0000 })
         )
       };
-      this.loadingScreen.scene.background = new THREE.Color("hsl(0, 100%, 100%)");
-      //set up loading box
+      this.loadingScreen.scene.background = new THREE.Color(
+        "hsl(0, 100%, 100%)"
+      );
+      //set up loading boxes
       this.loadingScreen.box.position.set(0, 0, 5);
+      this.loadingScreen.box2.position.set(0, 0, 5);
       this.loadingScreen.camera.lookAt(this.loadingScreen.box.position);
-      this.loadingScreen.scene.add(this.loadingScreen.box);
+      this.loadingScreen.scene.add(
+        this.loadingScreen.box,
+        this.loadingScreen.box2
+      );
 
       //set up loading manager
       const loadingManager = new THREE.LoadingManager();
@@ -155,14 +164,14 @@ export default {
         "/models/chair/N01_Beech.gltf",
         // called when the resource is loaded
         gltf => {
-          this.resources_loaded = true;//set resources loaded to true
+          this.resources_loaded = true; //set resources loaded to true
           this.chair = gltf.scene;
           this.scene.add(this.chair);
           this.chair.position.set(0, -0.3, 0);
         },
         // called while loading is progressing
         function(xhr) {
-          console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+          console.log("chair model "+(xhr.loaded / xhr.total) * 100 + "% loaded");
         },
         // called when loading has errors
         function() {
@@ -177,7 +186,7 @@ export default {
         this.container.clientWidth,
         this.container.clientHeight
       );
-      //set up configurator
+      //set up configurator scene
       this.camera = new THREE.PerspectiveCamera(
         70,
         this.container.clientWidth / this.container.clientHeight,
@@ -205,16 +214,23 @@ export default {
       this.controls.enablePan = false;
     },
     animate: function() {
-      //render loeading screen if resources are loading
+      //render loading screen if resources are loading
       if (this.resources_loaded == false) {
         requestAnimationFrame(this.animate);
 
         this.loadingScreen.box.position.x -= 0.05;
-        if (this.loadingScreen.box.position.x < -10) {
-          this.loadingScreen.box.position.x = 10;
+        this.loadingScreen.box2.position.x += 0.05;
+        if (this.loadingScreen.box.position.x < -6.5) {
+          this.loadingScreen.box.position.x = 6.5;
+        }
+        if (this.loadingScreen.box2.position.x > 6.5) {
+          this.loadingScreen.box2.position.x = -6.5;
         }
         this.loadingScreen.box.position.y = Math.sin(
           this.loadingScreen.box.position.x
+        );
+        this.loadingScreen.box2.position.y = Math.sin(
+          -this.loadingScreen.box.position.x
         );
         this.renderer.render(
           this.loadingScreen.scene,
@@ -223,7 +239,7 @@ export default {
         return;
       }
 
-      //dislay configurator if resources are loaded
+      // configurator if resources are loaded
       requestAnimationFrame(this.animate);
       this.renderer.render(this.scene, this.camera);
     },
