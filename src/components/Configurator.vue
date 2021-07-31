@@ -35,14 +35,14 @@
             <v-row no-gutters align="center" justify="center" class="pt-10">
               <v-col sm="0" md="2"></v-col>
               <v-col sm="12" md="5">
-                <button icon v-on:click="changeMaterial(`N01_BaseColor_Beech.png`)">
+                <button icon v-on:click="changeMaterial(`N01_BaseColor_Beech`)">
                   <v-avatar size="62">
                     <img src="/textures/beech.jpg">
                   </v-avatar>&nbsp;Original
                 </button>
               </v-col>
               <v-col sm="12" md="5">
-                <button icon v-on:click="changeMaterial(`N01_BaseColor_Oak.png`)">
+                <button icon v-on:click="changeMaterial(`N01_BaseColor_Oak`)">
                   <v-avatar size="62">
                     <v-hover>
                       <img src="/textures/oak.jpg">
@@ -56,14 +56,14 @@
             <v-row id="row2" no-gutters align="center" justify="center">
               <v-col sm="0" md="2"></v-col>
               <v-col sm="12" md="5">
-                <button v-on:click="changeMaterial(`dark.jpg`)">
+                <button v-on:click="changeMaterial(`dark`)">
                   <v-avatar size="62">
                     <img src="/textures/dark.jpg">
                   </v-avatar>&nbsp;Dark Wood
                 </button>
               </v-col>
               <v-col sm="12" md="5">
-                <button icon v-on:click="changeMaterial(`light.jpg`)">
+                <button icon v-on:click="changeMaterial(`light`)">
                   <v-avatar color="black" size="62">
                     <img src="/textures/light.jpg">
                   </v-avatar>&nbsp;Light Wood
@@ -93,13 +93,49 @@ export default {
       mesh: null,
       controls: null,
       chair: null,
-      originalChair: null,
-      container: null
+      container: null,
+      beechTexture: null,
+      oakTexture: null,
+      darkTexture: null,
+      lightTexture: null,
+      loadingScreen: null
     };
   },
   methods: {
     init: function() {
+      var manager = new THREE.LoadingManager(function() {
+        // this onLoad callback is executed when textures are loaded
+        console.log("done loading");
+      });
+
+      //load texture images
+      let textreLoader = new THREE.TextureLoader(manager);
+      this.beechTexture = textreLoader.load("/textures/N01_BaseColor_Beech.png");
+      this.oakTexture = textreLoader.load("/textures/N01_BaseColor_Oak.png");
+      this.darkTexture = textreLoader.load("/textures/dark.jpg");
+      this.lightTexture = textreLoader.load("/textures/light.jpg");
       this.container = document.getElementById("container");
+
+      const loader = new GLTFLoader();
+      //load chair model
+      loader.load(
+        // resource URL
+        "/models/chair/N01_Beech.gltf",
+        // called when the resource is loaded
+        gltf => {
+          this.chair = gltf.scene;
+          this.scene.add(this.chair);
+          this.chair.position.set(0, -0.3, 0);
+        },
+        // called while loading is progressing
+        function(xhr) {
+          console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+        },
+        // called when loading has errors
+        function() {
+          console.log("An error happened when loading model");
+        }
+      );
 
       this.camera = new THREE.PerspectiveCamera(
         70,
@@ -124,7 +160,6 @@ export default {
         this.container.clientHeight
       );
       this.container.appendChild(this.renderer.domElement);
-
       this.controls = new OrbitControls(this.camera, this.renderer.domElement);
       this.controls.autoRotate = true;
       this.controls.autoRotateSpeed = 0.5;
@@ -134,28 +169,6 @@ export default {
       this.controls.minDistance = 1;
 
       this.controls.enablePan = false;
-      const loader = new GLTFLoader();
-
-      //load chair model
-      loader.load(
-        // resource URL
-        "/models/chair/N01_Beech.gltf",
-        // called when the resource is loaded
-        gltf => {
-          this.chair = gltf.scene;
-          this.originalChair = gltf.scene;
-          this.scene.add(this.chair);
-          this.chair.position.set(0, -0.3, 0);
-        },
-        // called while loading is progressing
-        function(xhr) {
-          console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
-        },
-        // called when loading has errors
-        function() {
-          console.log("An error happened when loading model");
-        }
-      );
     },
     animate: function() {
       requestAnimationFrame(this.animate);
@@ -164,23 +177,30 @@ export default {
 
     //set new texture material to object on button click
     changeMaterial: function(path) {
-      const textureLoader = new THREE.TextureLoader();
-      let texture = textureLoader.load("/textures/" + path);
+      // const textureLoader = new THREE.TextureLoader();
+      let texture = null;
+      switch (path) {
+        case "N01_BaseColor_Beech":
+          texture = this.beechTexture;
+          break;
+        case "N01_BaseColor_Oak":
+          texture = this.oakTexture;
+          break;
+        case "dark":
+          texture = this.darkTexture;
+          break;
+        case "light":
+          texture = this.lightTexture;
+          break;
+        default:
+          texture = this.beechTexture;
+      }
+
       texture.flipY = false;
       texture.encoding = THREE.sRGBEncoding;
 
       this.chair.traverse(function(object) {
         if (object instanceof THREE.Mesh) {
-          if (path === "N01_BaseColor_Black.png") {
-            let metallic = textureLoader.load("/textures/N01_Metallic.png");
-            let metallicRough = textureLoader.load(
-              "/textures/N01_Metallic-N01_Roughness.png"
-            );
-            metallic.flipY = false;
-            metallicRough.flipY = false;
-            object.metalnessMap = metallic;
-            object.roughnessMap = metallicRough;
-          }
           object.material.map = texture;
         }
       });
@@ -188,11 +208,11 @@ export default {
     //Handle window resize, set camera aspect/renderer size
     resizeHandler: function() {
       this.camera.aspect =
-        this.container.clientWidth / this.container.clientHeight;
+      this.container.clientWidth / this.container.clientHeight;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(
-        this.container.clientWidth,
-        this.container.clientHeight
+      this.container.clientWidth,
+      this.container.clientHeight
       );
     }
   },
